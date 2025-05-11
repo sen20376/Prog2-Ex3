@@ -38,3 +38,17 @@
     -fx-background-color: white;
     -fx-text-fill: #ffffff;
 }
+
+.menu-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-font-size: 12px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 5 10;
+    -fx-cursor: hand;
+}
+
+.menu-button:hover {
+    -fx-background-color: #f5c518;
+    -fx-text-fill: black;
+}

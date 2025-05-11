@@ -1,12 +1,12 @@
 package at.ac.fhcampuswien.fhmdb;
 
 import at.ac.fhcampuswien.fhmdb.api.MovieAPI;
+import at.ac.fhcampuswien.fhmdb.db.DatabaseManager;
 import at.ac.fhcampuswien.fhmdb.entities.MovieEntity;
 import at.ac.fhcampuswien.fhmdb.entities.WatchlistMovieEntity;
 import at.ac.fhcampuswien.fhmdb.exceptions.DatabaseException;
 import at.ac.fhcampuswien.fhmdb.exceptions.MovieApiException;
 import at.ac.fhcampuswien.fhmdb.models.Genre;
-import at.ac.fhcampuswien.fhmdb.db.DatabaseManager;
 import at.ac.fhcampuswien.fhmdb.models.Movie;
 import at.ac.fhcampuswien.fhmdb.models.SortedState;
 import at.ac.fhcampuswien.fhmdb.repositories.MovieRepository;
@@ -23,6 +23,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
 
 import java.net.URL;
 import java.util.List;
@@ -39,6 +40,7 @@ public class HomeController implements Initializable {
     @FXML private JFXComboBox<String> genreComboBox;
     @FXML private JFXComboBox<String> releaseYearComboBox;
     @FXML private JFXComboBox<String> ratingFromComboBox;
+    @FXML private VBox sideMenu;
 
     private List<Movie> allMovies;
     private final ObservableList<Movie> observableMovies = FXCollections.observableArrayList();
@@ -49,11 +51,7 @@ public class HomeController implements Initializable {
 
     public HomeController() {
         try {
-            DatabaseManager dbm = new DatabaseManager(
-                    "jdbc:h2:~/fhmdb;AUTO_SERVER=TRUE",
-                    "sa",
-                    ""
-            );
+            DatabaseManager dbm = new DatabaseManager("jdbc:h2:~/fhmdb;AUTO_SERVER=TRUE", "sa", "");
             dbm.createConnectionSource();
             dbm.createTables();
 
@@ -68,7 +66,6 @@ public class HomeController implements Initializable {
         }
     }
 
-
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         initializeState();
@@ -77,7 +74,6 @@ public class HomeController implements Initializable {
 
     private void initializeState() {
         try {
-            // Filme von der API holen und im Cache speichern
             List<Movie> movies = MovieAPI.getAllMovies();
             movieRepo.removeAll();
             movieRepo.addAllMovies(movies);
@@ -136,8 +132,8 @@ public class HomeController implements Initializable {
         releaseYearComboBox.getSelectionModel().clearSelection();
         ratingFromComboBox.getSelectionModel().clearSelection();
         sortedState = SortedState.NONE;
-        homeBtn.setDisable(true);
-        watchlistNavBtn.setDisable(false);
+        if (homeBtn != null) homeBtn.setDisable(true);
+        if (watchlistNavBtn != null) watchlistNavBtn.setDisable(false);
     }
 
     @FXML
@@ -149,16 +145,8 @@ public class HomeController implements Initializable {
         List<Movie> watchlist = MovieEntity.toMovies(entities);
         setMovieList(watchlist);
         sortedState = SortedState.NONE;
-        homeBtn.setDisable(false);
-        watchlistNavBtn.setDisable(true);
-    }
-
-    private void showErrorDialog(String title, String msg) {
-        Alert a = new Alert(Alert.AlertType.ERROR);
-        a.setTitle(title);
-        a.setHeaderText(null);
-        a.setContentText(msg);
-        a.showAndWait();
+        if (homeBtn != null) homeBtn.setDisable(false);
+        if (watchlistNavBtn != null) watchlistNavBtn.setDisable(true);
     }
 
     @FXML
@@ -172,52 +160,20 @@ public class HomeController implements Initializable {
 
     private void sortMovies(SortedState dir) {
         if (dir == SortedState.ASCENDING) {
-            observableMovies.sort((a,b) -> a.getTitle().compareToIgnoreCase(b.getTitle()));
+            observableMovies.sort((a, b) -> a.getTitle().compareToIgnoreCase(b.getTitle()));
         } else {
-            observableMovies.sort((a,b) -> b.getTitle().compareToIgnoreCase(a.getTitle()));
+            observableMovies.sort((a, b) -> b.getTitle().compareToIgnoreCase(a.getTitle()));
         }
         sortedState = dir;
     }
 
-
-    public List<Movie> filterByQuery(List<Movie> movies, String query) {
-        if (query == null || query.isEmpty()) return movies;
-        if (movies == null) throw new IllegalArgumentException("movies must not be null");
-        return movies.stream()
-                .filter(m -> m.getTitle().toLowerCase().contains(query.toLowerCase())
-                        || m.getDescription().toLowerCase().contains(query.toLowerCase()))
-                .toList();
-    }
-
-    public List<Movie> filterByGenre(List<Movie> movies, Genre genre) {
-        if (genre == null) return movies;
-        if (movies == null) throw new IllegalArgumentException("movies must not be null");
-        return movies.stream()
-                .filter(m -> m.getGenres().contains(genre))
-                .toList();
-    }
-
-    public void applyAllFilters(String searchQuery, Object genre) {
-        List<Movie> filteredMovies = allMovies;
-
-        if (!searchQuery.isEmpty()) {
-            filteredMovies = filterByQuery(filteredMovies, searchQuery);
-        }
-
-        if (genre != null && !genre.toString().equals("No filter")) {
-            filteredMovies = filterByGenre(filteredMovies, Genre.valueOf(genre.toString()));
-        }
-
-        observableMovies.clear();
-        observableMovies.addAll(filteredMovies);
-    }
-
-    @FXML private void searchBtnClicked(ActionEvent ev) {
-        String q  = searchField.getText().trim().toLowerCase();
+    @FXML
+    private void searchBtnClicked(ActionEvent ev) {
+        String q = searchField.getText().trim().toLowerCase();
         String yr = validateComboboxValue(releaseYearComboBox.getValue());
         String rt = validateComboboxValue(ratingFromComboBox.getValue());
         String gn = validateComboboxValue(genreComboBox.getValue());
-        Genre genre = gn!=null ? Genre.valueOf(gn) : null;
+        Genre genre = gn != null ? Genre.valueOf(gn) : null;
 
         try {
             List<Movie> movies = MovieAPI.getAllMovies(q, genre, yr, rt);
@@ -233,7 +189,6 @@ public class HomeController implements Initializable {
         }
     }
 
-
     private String validateComboboxValue(String val) {
         return "No filter".equals(val) ? null : val;
     }
@@ -246,10 +201,34 @@ public class HomeController implements Initializable {
         observableMovies.setAll(movies);
     }
 
+    private void showErrorDialog(String title, String msg) {
+        Alert a = new Alert(Alert.AlertType.ERROR);
+        a.setTitle(title);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        a.showAndWait();
+    }
+
+    @FXML
+    private void toggleMenu(ActionEvent event) {
+        boolean isVisible = sideMenu.isVisible();
+        sideMenu.setVisible(!isVisible);
+        sideMenu.setManaged(!isVisible);
+    }
+
+    @FXML
+    private void showAbout(ActionEvent event) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("About");
+        alert.setHeaderText("FHMDb - Movie Application");
+        alert.setContentText("Strommer bester Lektor\nVersion 1.0");
+        alert.showAndWait();
+    }
+
+    // Zusatzfunktionen für Analyse
     public List<Movie> getMovies(String searchQuery, Genre genre, String releaseYear, String ratingFrom) {
         return MovieAPI.getAllMovies(searchQuery, genre, releaseYear, ratingFrom);
     }
-
 
     public String getMostPopularActor(List<Movie> movies) {
         return movies.stream()
