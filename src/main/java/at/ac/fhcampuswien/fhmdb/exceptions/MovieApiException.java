@@ -5,3 +5,4 @@ public class MovieApiException extends RuntimeException {
         super(message, cause);
     }
 }
+

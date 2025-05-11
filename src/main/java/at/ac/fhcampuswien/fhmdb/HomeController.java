@@ -4,8 +4,7 @@ import at.ac.fhcampuswien.fhmdb.api.MovieAPI;
 import at.ac.fhcampuswien.fhmdb.db.DatabaseManager;
 import at.ac.fhcampuswien.fhmdb.entities.MovieEntity;
 import at.ac.fhcampuswien.fhmdb.entities.WatchlistMovieEntity;
-import at.ac.fhcampuswien.fhmdb.exceptions.DatabaseException;
-import at.ac.fhcampuswien.fhmdb.exceptions.MovieApiException;
+import at.ac.fhcampuswien.fhmdb.exceptions.*;
 import at.ac.fhcampuswien.fhmdb.models.Genre;
 import at.ac.fhcampuswien.fhmdb.models.Movie;
 import at.ac.fhcampuswien.fhmdb.models.SortedState;
@@ -92,6 +91,13 @@ public class HomeController implements Initializable {
             }
         } catch (DatabaseException dbEx) {
             showErrorDialog("DB-Fehler beim Cachen der Filme", dbEx.getMessage());
+
+        } catch (MovieNotFoundException notFoundEx) {
+            showErrorDialog("Kein Film gefunden.", notFoundEx.getMessage());
+
+        } catch (InvalidSearchException searchEX) {
+            showErrorDialog("Fehlerhafte Suchparameter!", searchEX.getMessage());
+
         }
 
         sortedState = SortedState.NONE;

@@ -29,7 +29,7 @@ public class MovieCell extends ListCell<Movie> {
     private boolean collapsedDetails = true;
     private boolean inWatchlist = false;
 
-    public MovieCell(ClickEventHandler<Movie> addHandler, ClickEventHandler<Movie> removeHandler) {
+    public MovieCell(ClickEventHandler<Movie> onAddToWatchlistClicked, ClickEventHandler<Movie> onRemoveFromWatchlistClicked) {
         super();
 
         try {
@@ -69,9 +69,9 @@ public class MovieCell extends ListCell<Movie> {
             Movie m = getItem();
             if (m == null) return;
             if (inWatchlist) {
-                removeHandler.onClick(m);
+                onRemoveFromWatchlistClicked.onClick(m);
             } else {
-                addHandler.onClick(m);
+                onAddToWatchlistClicked.onClick(m);
             }
             inWatchlist = !inWatchlist;
             updateWatchlistButton();

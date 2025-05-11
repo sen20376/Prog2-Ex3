@@ -32,10 +32,13 @@ public class FhmdbApplication extends Application {
     }
 
     @Override
-    public void stop() throws Exception {
-        super.stop();
-        if (DatabaseManager.getConnectionSource() != null) {
-            DatabaseManager.getConnectionSource().closeQuietly();
+    public void stop() {
+        try {
+            if (DatabaseManager.getConnectionSource() != null) {
+                DatabaseManager.getConnectionSource().closeQuietly();
+            }
+        } catch (Exception e) {
+            System.err.println("Fehler beim Schließen der DB-Verbindung: " + e.getMessage());
         }
     }
 
